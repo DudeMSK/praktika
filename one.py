@@ -93,8 +93,8 @@ for filename in os.listdir(source_folder_path):
 
 # Конвертировать файлы .docx и .doc в папке "pol" в .txt
 for new_file_name in os.listdir(pol_folder_path):
-    print(print(f"{new_file_name} находится в {pol_folder_path}!"))
     file_path = os.path.join(pol_folder_path, new_file_name)
+    print(f"{new_file_name} находится в {pol_folder_path}!"))
     try:
         if file_path.endswith('.docx'):
             txt_filename = os.path.splitext(new_file_name)[0] + '.txt'
