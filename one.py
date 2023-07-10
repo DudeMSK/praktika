@@ -1,7 +1,7 @@
 import sys,os
 import re
 from collections import Counter
-#from PIL import Image
+import win32com.client
 import docx
 from docx import Document
 import textract
@@ -89,9 +89,33 @@ for filename in os.listdir(source_folder_path):
             print(f"Значение УИН не найдено в файле {filename}")
             print()
     else:
+        
         print(f"Неверный формат файла: {filename}")
 
-# Конвертировать файлы .docx и .doc в папке "pol" в .txt
+def convert_doc_to_docx(doc_file_path, docx_file_path):
+    # Создаем объект приложения Word
+    word_app = win32com.client.Dispatch("Word.Application")
+    # Открываем документ .doc
+    doc = word_app.Documents.Open(doc_file_path)
+    # Сохраняем его в формате .docx
+    doc.SaveAs(docx_file_path, 16)  # 16 означает формат .docx
+    # Закрываем документ и выходим из приложения Word
+    doc.Close()
+    word_app.Quit()
+
+for new_file_name in os.listdir(pol_folder_path):
+    file_path = os.path.join(pol_folder_path, new_file_name)
+    print(f"{new_file_name} находится в {pol_folder_path}!")
+    try:
+        if file_path.endswith('.doc'):
+            # Конвертировать .doc в .docx
+            docx_filename = os.path.splitext(new_file_name)[0] + '.docx'
+            docx_file_path = os.path.join(pol_folder_path, docx_filename)
+            convert_doc_to_docx(file_path, docx_file_path)
+            print(f"Файл {new_file_name} успешно сконвертирован в {docx_filename}!")
+    except Exception as e:
+        print(f"Ошибка при конвертации файла {new_file_name} в папку {docx_filename}: {str(e)}")
+
 for new_file_name in os.listdir(pol_folder_path):
     file_path = os.path.join(pol_folder_path, new_file_name)
     print(f"{new_file_name} находится в {pol_folder_path}!")
@@ -104,25 +128,30 @@ for new_file_name in os.listdir(pol_folder_path):
             with open(txt_file_path, "w", encoding="utf-8") as txt_file:
                 txt_file.write(text)
             print(f"Файл {new_file_name} успешно сконвертирован в {txt_filename}!")
-        elif file_path.endswith('.doc'):
-            txt_filename = os.path.splitext(new_file_name)[0] + '.txt'
-            txt_file_path = os.path.join(pol_folder_path, txt_filename)
-            text = textract.process(file_path, encoding='utf-8')
-            with open(txt_file_path, "w", encoding="utf-8") as txt_file:
-                txt_file.write(text.decode("utf-8"))
-            print(f"Файл {new_file_name} успешно сконвертирован в {txt_filename}!")
     except Exception as e:
         print(f"Ошибка при конвертации файла {new_file_name} в папку {pol_folder_path}: {str(e)}")
         
-#Этот скрипт выполняет следующую последовательность действий:
-#Определяет функцию find_uin_number, которая ищет номер УИН (уникальный идентификационный номер) в документе формата .docx.
-#Задает пути к различным папкам и файлам, включая папку-источник файлов, папку назначения для файлов, не являющихся текстовыми документами (.docx или .doc), папку назначения для текстовых файлов (.txt) и папку pol внутри папки назначения для файлов.
-#Циклически обрабатывает каждый файл в папке-источнике.
-#Если файл имеет расширение .docx и не начинается с ~$, выполняются следующие действия:
-#Ищется номер УИН в файле с помощью функции find_uin_number.
-#Если номер УИН найден, извлекаются категория заключения, номер реестра и другая информация из имени файла.
-#Поиск папок с соответствующим номером УИН в мастер-папке.
-#Если найдены папки с номером УИН, проходит обработка каждой папки.
+#Определение функции find_uin_number, которая ищет номер УИН (уникального идентификационного номера) в переданном документе. Для этого функция открывает документ с помощью библиотеки docx, проходит по параграфам документа и ищет совпадения с помощью регулярного выражения.
+Задание путей к папкам и файлам, которые будут использоваться в процессе. Например, master_folder_path - это путь к мастер-папке, source_folder_path - путь к папке, из которой будут браться файлы для обработки, и т.д.
+
+Цикл for для перебора файлов в папке source_folder_path. Для каждого файла выполняются следующие шаги:
+
+Проверка, что файл имеет расширение .docx и не является временным файлом (~$).
+Поиск номера УИН в файле с помощью функции find_uin_number.
+Если номер УИН найден, происходит извлечение информации о категории, номере реестра и т.д. из имени файла.
+Поиск папок с соответствующими номерами УИН в мастер-папке.
+Перебор файлов в найденных папках для выполнения дополнительных действий (например, копирования, переименования, перемещения файлов).
+Определение функции convert_doc_to_docx, которая использует библиотеку win32com.client для конвертации документов .doc в .docx. Для этого функция открывает документ .doc с помощью приложения Word, сохраняет его в формате .docx и закрывает документ и приложение Word.
+
+Цикл for для конвертации файлов .doc в .docx. Для каждого файла в папке pol_folder_path выполняются следующие шаги:
+
+Проверка, что файл имеет расширение .doc.
+Конвертация файла .doc в .docx с использованием функции convert_doc_to_docx.
+Цикл for для конвертации файлов .docx в .txt. Для каждого файла в папке pol_folder_path выполняются следующие шаги:
+
+Проверка, что файл имеет расширение .docx.
+Открытие файла .docx с помощью библиотеки docx.
+Извлечение текста из файла и сохранение его в формате .txt.
 #Внутри каждой папки проходит обработка каждого файла.
 #Если найден файл "Материалы по обоснованию в текстовой форме", он копируется в соответствующую папку назначения (в зависимости от расширения файла) и переименовывается.
 #Если в новом имени файла содержится подстрока "пол", файл перемещается в папку pol. Если в новом имени файла содержится подстрока "отр", файл перемещается в папку otr.
