@@ -28,7 +28,7 @@ master_folder_path = r"C:\Users\anaconda\Desktop\praktika\ТП_2022\ТП"
 source_folder_path = r"C:\Users\anaconda\Desktop\praktika\ТП_2022\ТП"
 dest_notTXT = r"C:\Users\anaconda\Desktop\praktika\ml\2022\notTXT"
 dest_TXT = r"C:\Users\anaconda\Desktop\praktika\ml\2022\TXT"
-pol_folder_path = os.path.join(dest_notTXT, "pol")
+pol_folder_path = os.path.join(dest_TXT, "pol")
 
 for filename in os.listdir(source_folder_path):
     file_path = os.path.join(source_folder_path, filename)
