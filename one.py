@@ -95,19 +95,22 @@ for filename in os.listdir(source_folder_path):
 # Конвертировать файлы .docx и .doc в папке "pol" в .txt
 for new_file_name in os.listdir(pol_folder_path):
     file_path = os.path.join(pol_folder_path, new_file_name)
-    if file_path.endswith('.docx'):
-        txt_filename = os.path.splitext(new_file_name)[0] + '.txt'
-        txt_file_path = os.path.join(pol_folder_path, txt_filename)
-        docx2txt.process(file_path, txt_file_path)
-        print(f"Файл {new_file_name} успешно сконвертирован в {txt_filename}!")
-    elif file_path.endswith('.doc'):
-        txt_filename = os.path.splitext(new_file_name)[0] + '.txt'
-        txt_file_path = os.path.join(pol_folder_path, txt_filename)
-        text = textract.process(file_path, encoding='utf-8')
-        with open(txt_file_path, "w", encoding="utf-8") as txt_file:
-            txt_file.write(text.decode("utf-8"))
-        print(f"Файл {new_file_name} успешно сконвертирован в {txt_filename}!")
-
+    try:
+        if file_path.endswith('.docx'):
+            txt_filename = os.path.splitext(new_file_name)[0] + '.txt'
+            txt_file_path = os.path.join(pol_folder_path, txt_filename)
+            docx2txt.process(file_path, txt_file_path)
+            print(f"Файл {new_file_name} успешно сконвертирован в {txt_filename}!")
+        elif file_path.endswith('.doc'):
+            txt_filename = os.path.splitext(new_file_name)[0] + '.txt'
+            txt_file_path = os.path.join(pol_folder_path, txt_filename)
+            text = textract.process(file_path, encoding='utf-8')
+            with open(txt_file_path, "w", encoding="utf-8") as txt_file:
+                txt_file.write(text.decode("utf-8"))
+            print(f"Файл {new_file_name} успешно сконвертирован в {txt_filename}!")
+    except Exception as e:
+        print(f"Ошибка при конвертации файла {new_file_name} в папку {pol_folder_path}: {str(e)}")
+        
 #Этот скрипт выполняет следующую последовательность действий:
 #Определяет функцию find_uin_number, которая ищет номер УИН (уникальный идентификационный номер) в документе формата .docx.
 #Задает пути к различным папкам и файлам, включая папку-источник файлов, папку назначения для файлов, не являющихся текстовыми документами (.docx или .doc), папку назначения для текстовых файлов (.txt) и папку pol внутри папки назначения для файлов.
