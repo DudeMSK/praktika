@@ -99,7 +99,10 @@ for new_file_name in os.listdir(pol_folder_path):
         if file_path.endswith('.docx'):
             txt_filename = os.path.splitext(new_file_name)[0] + '.txt'
             txt_file_path = os.path.join(pol_folder_path, txt_filename)
-            docx_to_txt(file_path, txt_file_path)
+            doc = Document(file_path)
+            text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+            with open(txt_file_path, "w", encoding="utf-8") as txt_file:
+                txt_file.write(text)
             print(f"Файл {new_file_name} успешно сконвертирован в {txt_filename}!")
         elif file_path.endswith('.doc'):
             txt_filename = os.path.splitext(new_file_name)[0] + '.txt'
