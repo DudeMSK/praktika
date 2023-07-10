@@ -1,18 +1,3 @@
-import sys,os 
-import re 
-from collections import Counter 
-from PIL import Image 
-import docx 
-from docx import Document 
-import textract 
-import shutil 
-from pathlib import Path 
-import glob 
-import docx2txt 
-from subprocess import Popen, PIPE 
-import pytesseract 
- 
- 
 import sys,os
 import re
 from collections import Counter
