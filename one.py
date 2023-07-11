@@ -130,6 +130,88 @@ for new_file_name in os.listdir(pol_folder_path):
             print(f"Файл {new_file_name} успешно сконвертирован в {txt_filename}!")
     except Exception as e:
         print(f"Ошибка при конвертации файла {new_file_name} в папку {pol_folder_path}: {str(e)}")
+
+############################################################################################################
+#######################################  НА ДАННЫЙ КАТЕГОРИЯ ВСЕХ ФАЛОВ: ПОЛОЖИТЕЛЬНАЯ  ####################
+
+# Функция для предобработки текста
+def preprocess_text(text):
+    text = text.lower()  # Приводим к нижнему регистру
+    text = re.sub(r"[^\w\s]", "", text)  # Удаляем пунктуацию
+    return text
+
+# Функция для чтения текста из файла формата .txt
+def read_text_from_txt(txt_file):
+    with open(txt_file, 'r', encoding='utf-8') as file:
+        text = file.read()
+    return text
+
+# Функция для преобразования файла формата .docx в .txt
+def convert_docx_to_txt(docx_file):
+    doc = Document(docx_file)
+    paragraphs = [paragraph.text for paragraph in doc.paragraphs]
+    text = "\n".join(paragraphs)
+    return text
+
+# Создание набора данных для обучения модели
+def create_dataset(greetings_files, microbiology_files):
+    dataset = []
+    labels = []
+
+    for file in greetings_files:
+        text = read_text_from_txt(file)
+        preprocessed_text = preprocess_text(text)
+        dataset.append(preprocessed_text)
+        labels.append("пол")
+
+    for file in microbiology_files:
+        text = convert_docx_to_txt(file)
+        preprocessed_text = preprocess_text(text)
+        dataset.append(preprocessed_text)
+        labels.append("отр")
+
+    return dataset, labels
+
+# Каталог с положительными и отрицательными файлами
+greetings_folder = r"C:\Users\anaconda\Desktop\praktika\ml\pol"
+microbiology_folder = r"C:\Users\anaconda\Desktop\praktika\ml\2021\TXT\otr"
+
+# Получить список файлов .txt из каталогов
+greetings_files = [os.path.join(greetings_folder, f) for f in os.listdir(greetings_folder) if f.endswith(".txt")]
+microbiology_files = [os.path.join(microbiology_folder, f) for f in os.listdir(microbiology_folder) if f.endswith(".docx")]
+
+# Создание набора данных для обучения
+dataset, labels = create_dataset(greetings_files, microbiology_files)
+
+# Преобразование текстовых данных в матрицу счетчиков признаков
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(dataset)
+
+# Разделение набора данных на обучающий и тестовый наборы
+X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, random_state=42)
+
+# Обучение модели
+model = MultinomialNB()
+model.fit(X_train, y_train)
+
+# Оценка производительности модели
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+
+# Классификация новых файлов
+classifications_folder = "C:\\Users\\anaconda\\Desktop\\praktika\\files"
+new_files = [os.path.join(classifications_folder, f) for f in os.listdir(classifications_folder) if f.endswith(".txt")]
+for file_path in new_files:
+    text = read_text_from_txt(file_path)
+    preprocessed_text = preprocess_text(text)
+    features = vectorizer.transform([preprocessed_text])
+    category = model.predict(features)[0]
+    print("Файл:", file_path)
+    print("Категория:", category)
+    print()
+
+##############################################################################################
         
 # 1. Определение функции find_uin_number, которая ищет номер УИН (уникального идентификационного номера) в переданном документе. Для этого функция открывает документ с помощью библиотеки docx, проходит по параграфам документа и ищет совпадения с помощью регулярного выражения.
 # 2. Задание путей к папкам и файлам, которые будут использоваться в процессе. Например, master_folder_path - это путь к мастер-папке, source_folder_path - путь к папке, из которой будут браться файлы для обработки, и т.д.
