@@ -11,6 +11,13 @@ import glob
 import docx2txt
 from subprocess import Popen, PIPE
 import pytesseract
+import numpy as np
+import sklearn
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.svm import SVC
 
 def find_uin_number(file_path):
     doc = Document(file_path)
@@ -24,11 +31,22 @@ def find_uin_number(file_path):
 
     return None
 
-master_folder_path = r"C:\Users\anaconda\Desktop\praktika\ТП_2022\ТП"
-source_folder_path = r"C:\Users\anaconda\Desktop\praktika\ТП_2022\ТП"
-dest_notTXT = r"C:\Users\anaconda\Desktop\praktika\ml\2022\notTXT"
-dest_TXT = r"C:\Users\anaconda\Desktop\praktika\ml\2022\TXT"
+#master_folder_path = r".\ТП_2021"
+#source_folder_path = r".\ТП_2021"
+#master_folder_path = r".\ТП_2022\ТП"
+#source_folder_path = r".\ТП_2022\ТП"
+master_folder_path = r".\ТП_2023\ТП"
+source_folder_path = r".\ТП_2023\ТП"
+
+#dest_notTXT = r".\ml\2021\notTXT"
+#dest_TXT = r".\ml\2021\TXT"
+#dest_notTXT = r".\ml\2022\notTXT"
+#dest_TXT = r".\ml\2022\TXT"
+dest_notTXT = r".\ml\2023\notTXT"
+dest_TXT = r".\ml\2023\TXT"
+
 pol_folder_path = os.path.join(dest_TXT, "pol")
+otr_folder_path = os.path.join(dest_TXT, "otr")
 
 for filename in os.listdir(source_folder_path):
     file_path = os.path.join(source_folder_path, filename)
@@ -103,6 +121,7 @@ def convert_doc_to_docx(doc_file_path, docx_file_path):
     doc.Close()
     word_app.Quit()
 
+# Конвертировать файлы .docx и .doc в папке "pol" в .txt
 for new_file_name in os.listdir(pol_folder_path):
     file_path = os.path.join(pol_folder_path, new_file_name)
     print(f"{new_file_name} находится в {pol_folder_path}!")
@@ -131,8 +150,40 @@ for new_file_name in os.listdir(pol_folder_path):
     except Exception as e:
         print(f"Ошибка при конвертации файла {new_file_name} в папку {pol_folder_path}: {str(e)}")
 
+# Конвертировать файлы .docx и .doc в папке "otr" в .txt
+for new_file_name in os.listdir(otr_folder_path):
+    file_path = os.path.join(otr_folder_path, new_file_name)
+    print(f"{new_file_name} находится в {otr_folder_path}!")
+    try:
+        if file_path.endswith('.doc'):
+            # Конвертировать .doc в .docx
+            docx_filename = os.path.splitext(new_file_name)[0] + '.docx'
+            docx_file_path = os.path.join(otr_folder_path, docx_filename)
+            convert_doc_to_docx(file_path, docx_file_path)
+            print(f"Файл {new_file_name} успешно сконвертирован в {docx_filename}!")
+    except Exception as e:
+        print(f"Ошибка при конвертации файла {new_file_name} в папку {docx_filename}: {str(e)}")
+
+for new_file_name in os.listdir(otr_folder_path):
+    file_path = os.path.join(otr_folder_path, new_file_name)
+    print(f"{new_file_name} находится в {otr_folder_path}!")
+    try:
+        if file_path.endswith('.docx'):
+            txt_filename = os.path.splitext(new_file_name)[0] + '.txt'
+            txt_file_path = os.path.join(otr_folder_path, txt_filename)
+            doc = Document(file_path)
+            text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+            with open(txt_file_path, "w", encoding="utf-8") as txt_file:
+                txt_file.write(text)
+            print(f"Файл {new_file_name} успешно сконвертирован в {txt_filename}!")
+    except Exception as e:
+        print(f"Ошибка при конвертации файла {new_file_name} в папку {otr_folder_path}: {str(e)}")
+
 ############################################################################################################
-#######################################  НА ДАННЫЙ КАТЕГОРИЯ ВСЕХ ФАЛОВ: ПОЛОЖИТЕЛЬНАЯ  ####################
+############################################################################################################
+############################################################################################################
+
+
 
 # Функция для предобработки текста
 def preprocess_text(text):
@@ -165,7 +216,7 @@ def create_dataset(greetings_files, microbiology_files):
         labels.append("пол")
 
     for file in microbiology_files:
-        text = convert_docx_to_txt(file)
+        text = read_text_from_txt(file)
         preprocessed_text = preprocess_text(text)
         dataset.append(preprocessed_text)
         labels.append("отр")
@@ -174,11 +225,11 @@ def create_dataset(greetings_files, microbiology_files):
 
 # Каталог с положительными и отрицательными файлами
 greetings_folder = r"C:\Users\anaconda\Desktop\praktika\ml\pol"
-microbiology_folder = r"C:\Users\anaconda\Desktop\praktika\ml\2021\TXT\otr"
+microbiology_folder = r"C:\Users\anaconda\Desktop\praktika\ml\otr"
 
 # Получить список файлов .txt из каталогов
 greetings_files = [os.path.join(greetings_folder, f) for f in os.listdir(greetings_folder) if f.endswith(".txt")]
-microbiology_files = [os.path.join(microbiology_folder, f) for f in os.listdir(microbiology_folder) if f.endswith(".docx")]
+microbiology_files = [os.path.join(microbiology_folder, f) for f in os.listdir(microbiology_folder) if f.endswith(".txt")]
 
 # Создание набора данных для обучения
 dataset, labels = create_dataset(greetings_files, microbiology_files)
@@ -197,10 +248,11 @@ model.fit(X_train, y_train)
 # Оценка производительности модели
 y_pred = model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
+print()
 print("Accuracy:", accuracy)
 
 # Классификация новых файлов
-classifications_folder = "C:\\Users\\anaconda\\Desktop\\praktika\\files"
+classifications_folder = ".\\files"
 new_files = [os.path.join(classifications_folder, f) for f in os.listdir(classifications_folder) if f.endswith(".txt")]
 for file_path in new_files:
     text = read_text_from_txt(file_path)
