@@ -179,91 +179,28 @@ for new_file_name in os.listdir(otr_folder_path):
     except Exception as e:
         print(f"Ошибка при конвертации файла {new_file_name} в папку {otr_folder_path}: {str(e)}")
 
-############################################################################################################
-############################################################################################################
-############################################################################################################
-
-
-
-# Функция для предобработки текста
-def preprocess_text(text):
-    text = text.lower()  # Приводим к нижнему регистру
-    text = re.sub(r"[^\w\s]", "", text)  # Удаляем пунктуацию
-    return text
-
-# Функция для чтения текста из файла формата .txt
-def read_text_from_txt(txt_file):
-    with open(txt_file, 'r', encoding='utf-8') as file:
-        text = file.read()
-    return text
-
-# Функция для преобразования файла формата .docx в .txt
-def convert_docx_to_txt(docx_file):
-    doc = Document(docx_file)
-    paragraphs = [paragraph.text for paragraph in doc.paragraphs]
-    text = "\n".join(paragraphs)
-    return text
-
-# Создание набора данных для обучения модели
-def create_dataset(greetings_files, microbiology_files):
-    dataset = []
-    labels = []
-
-    for file in greetings_files:
-        text = read_text_from_txt(file)
-        preprocessed_text = preprocess_text(text)
-        dataset.append(preprocessed_text)
-        labels.append("пол")
-
-    for file in microbiology_files:
-        text = read_text_from_txt(file)
-        preprocessed_text = preprocess_text(text)
-        dataset.append(preprocessed_text)
-        labels.append("отр")
-
-    return dataset, labels
-
-# Каталог с положительными и отрицательными файлами
-greetings_folder = r"C:\Users\anaconda\Desktop\praktika\ml\pol"
-microbiology_folder = r"C:\Users\anaconda\Desktop\praktika\ml\otr"
-
-# Получить список файлов .txt из каталогов
-greetings_files = [os.path.join(greetings_folder, f) for f in os.listdir(greetings_folder) if f.endswith(".txt")]
-microbiology_files = [os.path.join(microbiology_folder, f) for f in os.listdir(microbiology_folder) if f.endswith(".txt")]
-
-# Создание набора данных для обучения
-dataset, labels = create_dataset(greetings_files, microbiology_files)
-
-# Преобразование текстовых данных в матрицу счетчиков признаков
-vectorizer = CountVectorizer()
-X = vectorizer.fit_transform(dataset)
-
-# Разделение набора данных на обучающий и тестовый наборы
-X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, random_state=42)
-
-# Обучение модели
-model = MultinomialNB()
-model.fit(X_train, y_train)
-
-# Оценка производительности модели
-y_pred = model.predict(X_test)
-accuracy = accuracy_score(y_test, y_pred)
-print()
-print("Accuracy:", accuracy)
-
-# Классификация новых файлов
-classifications_folder = ".\\files"
-new_files = [os.path.join(classifications_folder, f) for f in os.listdir(classifications_folder) if f.endswith(".txt")]
-for file_path in new_files:
-    text = read_text_from_txt(file_path)
-    preprocessed_text = preprocess_text(text)
-    features = vectorizer.transform([preprocessed_text])
-    category = model.predict(features)[0]
-    print("Файл:", file_path)
-    print("Категория:", category)
-    print()
+# Код выполняет следующие действия:
+# 1) find_uin_number(file_path): Это функция, которая принимает путь к файлу и ищет в нем УИН номер (уникальный идентификационный номер). Она открывает файл в формате .docx и проверяет каждый параграф на наличие соответствующего шаблона. Если номер найден, функция возвращает его, в противном случае возвращает None.
+# 2) master_folder_path и source_folder_path: Это переменные, содержащие пути к мастер-папке и исходной папке соответственно. Вы можете изменить эти значения на свои пути.
+# 3) dest_notTXT и dest_TXT: Это переменные, содержащие пути к папкам, куда будут копироваться файлы в зависимости от их формата. Файлы в формате .pdf будут скопированы в dest_notTXT, остальные файлы в dest_TXT. Вы также можете изменить эти значения по вашему усмотрению.
+# 4) pol_folder_path и otr_folder_path: Это переменные, содержащие пути к папкам "pol" и "otr" внутри dest_TXT. В эти папки будут перемещены соответствующие файлы в зависимости от их категории.
+# 5) Цикл for filename in os.listdir(source_folder_path): Этот цикл проходит через каждый файл в исходной папке. Для каждого файла проверяется, является ли он файлом формата .docx и не начинается ли имя файла с "~$". Если условие выполняется, выполняются дальнейшие действия.
+# 6) uin_number = find_uin_number(file_path): Вызывается функция find_uin_number для поиска УИН номера в файле. Если номер найден, он сохраняется в переменной uin_number, иначе она принимает значение None.
+# 7) digits_only = re.sub(r"\D", "", uin_number): Здесь происходит удаление всех символов, кроме цифр, из УИН номера, сохраненного в переменной uin_number. Результат сохраняется в переменной digits_only.
+# 8) match = re.search(r'(\S+).*?(пол|отр)', filename): Эта строка ищет в имени файла соответствующий шаблон, состоящий из слова, за которым следует "пол" или "отр". Результат сохраняется в переменной match.
+# 9) Цикл for root, dirs, files in os.walk(master_folder_path): Этот цикл рекурсивно обходит все папки и файлы в мастер-папке. Он ищет папку, содержащую УИН номер, и сохраняет путь к этой папке в переменной folder_path.
+# 10) Цикл for file_name in files: Этот цикл проходит через все файлы в найденной папке.
+# 11) if "Материалы по обоснованию в текстовой форме" in file_name: Это условие проверяет, содержит ли имя файла строку "Материалы по обоснованию в текстовой форме". Если условие выполняется, выполняются следующие действия.
+# 12) dest_folder = dest_notTXT if file_path.endswith('.pdf') else dest_TXT: В зависимости от расширения файла (.pdf или другое), выбирается целевая папка для копирования.
+# 13) new_file_name = f'{word} {numbers}{os.path.splitext(file_name)[1]}': Создается новое имя файла, состоящее из слова из шаблона, номера реестра и расширения файла.
+# 14) shutil.copy(file_path, dest_path): Файл копируется из исходного пути file_path в целевую папку dest_path.
+# 15) os.rename(dest_path, new_file_path): Файл переименовывается в новое имя new_file_path.
+# 16) shutil.move(new_file_path, pol_folder): Файл перемещается в папку "pol".
+# 17) shutil.move(new_file_path, otr_folder): Файл перемещается в папку "otr".
+# 18) В остальной части кода выполняются аналогичные действия для остальных папок и файлов.
 
 ##############################################################################################
+старое выполнение действий:
         
 # 1. Определение функции find_uin_number, которая ищет номер УИН (уникального идентификационного номера) в переданном документе. Для этого функция открывает документ с помощью библиотеки docx, проходит по параграфам документа и ищет совпадения с помощью регулярного выражения.
 # 2. Задание путей к папкам и файлам, которые будут использоваться в процессе. Например, master_folder_path - это путь к мастер-папке, source_folder_path - путь к папке, из которой будут браться файлы для обработки, и т.д.
